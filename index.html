@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NUMSE Marketplace</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0c0a; --surface: #1a1714; --surface2: #242019; --border: #2e2a24;
+    --gold: #c9a84c; --gold-light: #e8c96a; --gold-dim: #3d3010;
+    --text: #e8e0d4; --text-muted: #7a7060; --red: #c0442a; --green: #4a9c5d;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
+  
+  nav { background: var(--surface); border-bottom: 1px solid var(--border); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+  .logo { font-family: 'Playfair Display', serif; font-size: 1.5rem; color: var(--gold); font-weight: 900; }
+  .nav-right { display: flex; gap: 1rem; align-items: center; }
+
+  .container { max-width: 1200px; margin: 2rem auto; padding: 0 1.5rem; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 2rem; }
+  
+  /* Cards */
+  .card { background: var(--surface); border: 1px solid var(--border); padding: 1.25rem; border-radius: 8px; display: flex; flex-direction: column; transition: 0.2s; }
+  .card:hover { border-color: var(--gold); transform: translateY(-3px); }
+  .card-img { width: 100%; height: 200px; object-fit: cover; border-radius: 6px; margin-bottom: 1rem; background: var(--surface2); }
+  .card-title { font-family: 'Playfair Display', serif; font-size: 1.3rem; margin-bottom: 0.5rem; }
+  .card-price { color: var(--gold); font-family: 'DM Mono', monospace; font-weight: bold; font-size: 1.1rem; }
+  
+  /* Buttons */
+  .btn { padding: 0.6rem 1.2rem; border-radius: 4px; border: none; cursor: pointer; font-family: inherit; font-weight: 500; transition: 0.2s; text-align: center; text-decoration: none; }
+  .btn-gold { background: var(--gold); color: var(--bg); }
+  .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border); }
+  .btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+  .btn-danger { background: var(--red); color: white; margin-top: 0.5rem; }
+
+  /* Modals */
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 1rem; }
+  .overlay.show { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border); width: 100%; max-width: 450px; padding: 2rem; border-radius: 12px; position: relative; }
+  
+  /* Chat UI */
+  #chat-history { height: 300px; overflow-y: auto; background: var(--surface2); padding: 1rem; border-radius: 8px; display: flex; flex-direction: column; gap: 0.8rem; margin: 1rem 0; }
+  .msg { padding: 0.6rem; border-radius: 6px; max-width: 85%; font-size: 0.9rem; }
+  .msg-me { align-self: flex-end; background: var(--gold-dim); border: 1px solid var(--gold); color: var(--gold-light); }
+  .msg-them { align-self: flex-start; background: var(--surface); border: 1px solid var(--border); }
+
+  .form-group { margin-bottom: 1rem; }
+  label { display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.3rem; text-transform: uppercase; }
+  input, textarea { width: 100%; background: var(--surface2); border: 1px solid var(--border); padding: 0.8rem; color: var(--text); border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">NUMSE</div>
+  <div class="nav-right" id="nav-content">
+    <button class="btn btn-outline" onclick="openModal('auth-overlay')">Login / Register</button>
+  </div>
+</nav>
+
+<div class="container">
+  <div style="display: flex; justify-content: space-between; align-items: center;">
+    <h1 style="font-family: 'Playfair Display', serif;">Listings</h1>
+    <button class="btn btn-gold" onclick="openSell()">+ Sell Something</button>
+  </div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<div class="overlay" id="auth-overlay">
+  <div class="modal">
+    <h2 id="auth-title">Welcome</h2>
+    <div class="form-group" style="margin-top:1rem;">
+      <label>Username</label>
+      <input type="text" id="auth-user">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="auth-pass">
+    </div>
+    <button class="btn btn-gold" style="width:100%" onclick="doAuth('login')">Login</button>
+    <button class="btn btn-outline" style="width:100%; margin-top:0.5rem;" onclick="doAuth('register')">Register New Account</button>
+    <button class="btn btn-outline" style="width:100%; margin-top:0.5rem; border:none;" onclick="closeModals()">Cancel</button>
+  </div>
+</div>
+
+<div class="overlay" id="sell-overlay">
+  <div class="modal">
+    <h2>Post Listing</h2>
+    <div class="form-group" style="margin-top:1rem;">
+      <label>Product Image</label>
+      <input type="file" id="sell-img" accept="image/*">
+    </div>
+    <div class="form-group">
+      <label>Item Name</label>
+      <input type="text" id="sell-title">
+    </div>
+    <div class="form-group">
+      <label>Price (Coins)</label>
+      <input type="number" id="sell-price">
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <textarea id="sell-desc" rows="3"></textarea>
+    </div>
+    <button class="btn btn-gold" style="width:100%" onclick="doSell()">Post Now</button>
+    <button class="btn btn-outline" style="width:100%; margin-top:0.5rem;" onclick="closeModals()">Cancel</button>
+  </div>
+</div>
+
+<div class="overlay" id="chat-overlay">
+  <div class="modal">
+    <h2 id="chat-header">Chat</h2>
+    <div id="chat-history"></div>
+    <div style="display:flex; gap:0.5rem;">
+      <input type="text" id="chat-input" placeholder="Type a message...">
+      <button class="btn btn-gold" onclick="sendMessage()">Send</button>
+    </div>
+    <button class="btn btn-outline" style="width:100%; margin-top:1rem;" onclick="closeModals()">Close Chat</button>
+  </div>
+</div>
+
+<script>
+let currentUser = localStorage.getItem('username');
+let chatPartner = null;
+
+async function api(method, path, body) {
+  const token = localStorage.getItem('token');
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  
+  const res = await fetch(path, { method, headers, body: body ? JSON.stringify(body) : null });
+  return res.json();
+}
+
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModals() { document.querySelectorAll('.overlay').forEach(o => o.classList.remove('show')); }
+
+// --- AUTH ---
+async function doAuth(type) {
+  const username = document.getElementById('auth-user').value;
+  const password = document.getElementById('auth-pass').value;
+  const res = await api('POST', type === 'login' ? '/api/login' : '/api/register', { username, password });
+  
+  if (res.token) {
+    localStorage.setItem('token', res.token);
+    localStorage.setItem('username', res.username);
+    location.reload();
+  } else {
+    alert(res.error || "Error");
+  }
+}
+
+// --- LOAD LISTINGS ---
+async function loadListings() {
+  const items = await api('GET', '/api/listings');
+  const grid = document.getElementById('grid');
+  
+  grid.innerHTML = items.map(l => `
+    <div class="card">
+      ${l.image ? `<img src="${l.image}" class="card-img">` : '<div class="card-img" style="display:flex;align-items:center;justify-content:center;">No Image</div>'}
+      <div class="card-title">${l.title}</div>
+      <div class="card-price">🪙 ${l.price}</div>
+      <div style="font-size:0.8rem; color:var(--text-muted); margin: 0.5rem 0;">Seller: ${l.seller}</div>
+      
+      <div style="display:flex; flex-direction:column; gap:0.5rem; margin-top:auto;">
+        <button class="btn btn-gold" onclick="buyItem('${l.id}')">Buy Now</button>
+        <button class="btn btn-outline" onclick="openChat('${l.seller}')">💬 Chat</button>
+        ${(currentUser === 'admin' || currentUser === l.seller) ? 
+          `<button class="btn btn-danger" onclick="deleteItem('${l.id}')">Delete Listing</button>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+// --- SELL ---
+function openSell() {
+  if (!currentUser) return openModal('auth-overlay');
+  openModal('sell-overlay');
+}
+
+async function doSell() {
+  const file = document.getElementById('sell-img').files[0];
+  let base64 = null;
+  
+  if (file) {
+    base64 = await new Promise(r => {
+      const reader = new FileReader();
+      reader.onloadend = () => r(reader.result);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  const res = await api('POST', '/api/listings', {
+    title: document.getElementById('sell-title').value,
+    price: document.getElementById('sell-price').value,
+    desc: document.getElementById('sell-desc').value,
+    image: base64
+  });
+
+  if (!res.error) location.reload();
+}
+
+// --- CHAT ---
+async function openChat(seller) {
+  if (!currentUser) return openModal('auth-overlay');
+  if (currentUser === seller) return alert("You cannot chat with yourself.");
+  
+  chatPartner = seller;
+  document.getElementById('chat-header').innerText = "Chat with " + seller;
+  openModal('chat-overlay');
+  refreshChat();
+}
+
+async function refreshChat() {
+  if (!chatPartner || !document.getElementById('chat-overlay').classList.contains('show')) return;
+  
+  const msgs = await api('GET', '/api/messages');
+  const filtered = msgs.filter(m => 
+    (m.from === currentUser && m.to === chatPartner) || (m.from === chatPartner && m.to === currentUser)
+  );
+
+  document.getElementById('chat-history').innerHTML = filtered.map(m => `
+    <div class="msg ${m.from === currentUser ? 'msg-me' : 'msg-them'}">
+      <div style="font-size:0.7rem; opacity:0.7;">${m.from}</div>
+      ${m.text}
+    </div>
+  `).join('');
+  
+  const hist = document.getElementById('chat-history');
+  hist.scrollTop = hist.scrollHeight;
+  setTimeout(refreshChat, 3000);
+}
+
+async function sendMessage() {
+  const input = document.getElementById('chat-input');
+  if (!input.value.trim()) return;
+  await api('POST', '/api/messages', { to: chatPartner, text: input.value });
+  input.value = '';
+  refreshChat();
+}
+
+async function buyItem(id) {
+  if (!currentUser) return openModal('auth-overlay');
+  if (confirm("Confirm purchase?")) {
+    const res = await api('POST', `/api/buy/${id}`); // Assumes you have a /api/buy route in server.js
+    if (res.error) alert(res.error);
+    else { alert("Purchased!"); location.reload(); }
+  }
+}
+
+async function deleteItem(id) {
+  if (confirm("Delete this listing?")) {
+    await api('DELETE', `/api/listings/${id}`);
+    location.reload();
+  }
+}
+
+// Initial UI
+if (currentUser) {
+  document.getElementById('nav-content').innerHTML = `
+    <div style="font-family:'DM Mono'; font-size:0.9rem; margin-right:1rem;">Welcome, <b>${currentUser}</b></div>
+    <button class="btn btn-outline" onclick="localStorage.clear(); location.reload();">Logout</button>
+  `;
+}
+
+loadListings();
+</script>
+</body>
+</html>
