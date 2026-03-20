@@ -1,0 +1,15 @@
+name = "numse-marketplace"
+compatibility_date = "2024-09-23"
+pages_build_output_dir = "."
+
+# ── KV Namespace ─────────────────────────────────────────────────────────────
+# After creating your KV namespace in the Cloudflare dashboard (or with wrangler),
+# replace the placeholder IDs below.
+#
+#   wrangler kv:namespace create NUMSE_KV
+#   wrangler kv:namespace create NUMSE_KV --preview
+#
+[[kv_namespaces]]
+binding    = "NUMSE_KV"
+id         = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
+preview_id = "REPLACE_WITH_YOUR_KV_PREVIEW_NAMESPACE_ID"

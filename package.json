@@ -1,0 +1,15 @@
+{
+  "name": "numse-marketplace",
+  "version": "1.0.0",
+  "description": "NUMSE Marketplace — Cloudflare Pages",
+  "scripts": {
+    "dev": "wrangler pages dev . --kv NUMSE_KV",
+    "deploy": "wrangler pages deploy ."
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}
